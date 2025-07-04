@@ -1,13 +1,14 @@
 import os
 from flask import Flask, request
-from telegram import Update
+from telegram import Update, Bot
 from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, filters
 from dotenv import load_dotenv
+import asyncio
 
 load_dotenv()
 
 TOKEN = os.getenv("BOT_TOKEN")
-WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # e.g. https://your-bot-name.onrender.com
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # masalan: https://greeting2-0.onrender.com
 
 flask_app = Flask(__name__)
 telegram_app = ApplicationBuilder().token(TOKEN).build()
@@ -19,26 +20,18 @@ async def welcome(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 telegram_app.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, welcome))
 
-
 @flask_app.route("/")
 def home():
     return "Bot ishlayapti!"
 
-@flask_app.route(f"/{TOKEN}", methods=["POST"])
+@flask_app.route("/webhook", methods=["POST"])
 async def webhook():
     update = Update.de_json(request.get_json(force=True), telegram_app.bot)
     await telegram_app.process_update(update)
     return "OK"
 
 if __name__ == "__main__":
-    import asyncio
-    from telegram import Bot
-
-    # Flask portni ochamiz
     port = int(os.environ.get("PORT", 10000))
-    
-    # Webhookni sozlash
-    bot = Bot(token="7395563447:AAEN5xQTNdO1h736ExIhKualN2bwgebXDKA")
-    asyncio.run(bot.set_webhook(f"{WEBHOOK_URL}/{TOKEN}"))
-
+    bot = Bot(token=TOKEN)
+    asyncio.run(bot.set_webhook(f"{WEBHOOK_URL}/webhook"))
     flask_app.run(host="0.0.0.0", port=port)
