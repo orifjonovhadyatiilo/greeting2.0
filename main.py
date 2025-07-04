@@ -13,5 +13,5 @@ async def welcome(update: Update, context: ContextTypes.DEFAULT_TYPE):
 app = ApplicationBuilder().token(BOT_TOKEN).build()
 app.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, welcome))
 
-if name == "main":
+if __name__ == "__main__":
     app.run_polling()
