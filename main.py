@@ -38,7 +38,7 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     
     # Webhookni sozlash
-    bot = Bot(token=TOKEN)
+    bot = Bot(token=7395563447:AAEN5xQTNdO1h736ExIhKualN2bwgebXDKA)
     asyncio.run(bot.set_webhook(f"{WEBHOOK_URL}/{TOKEN}"))
 
     flask_app.run(host="0.0.0.0", port=port)
