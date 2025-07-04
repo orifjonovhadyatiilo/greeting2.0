@@ -1,3 +1,2 @@
-git add render.yaml
-git commit -m "Set python version to 3.10"
-git push
+build:
+  pythonVersion: 3.10
