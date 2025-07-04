@@ -1,37 +1,38 @@
 import os
-from flask import Flask, request
-from telegram import Update, Bot
-from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, filters
-from dotenv import load_dotenv
 import asyncio
+from flask import Flask, request
+from telegram import Update
+from telegram.ext import ApplicationBuilder
 
+from dotenv import load_dotenv
 load_dotenv()
 
-TOKEN = os.getenv("BOT_TOKEN")
-WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # masalan: https://greeting2-0.onrender.com
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 
-flask_app = Flask(__name__)
-telegram_app = ApplicationBuilder().token(TOKEN).build()
+# Flask ilovasini yaratish
+app = Flask(__name__)
 
-# 👋 Yangi a'zoga javob
-async def welcome(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    for user in update.message.new_chat_members:
-        await update.message.reply_text(f"👋 Salom, {user.full_name}! Guruhimizga xush kelibsiz!")
+# Telegram botini yaratish
+telegram_app = ApplicationBuilder().token(BOT_TOKEN).build()
 
-telegram_app.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, welcome))
-
-@flask_app.route("/")
-def home():
-    return "Bot ishlayapti!"
-
-@flask_app.route("/webhook", methods=["POST"])
+@app.route("/webhook", methods=["POST"])
 async def webhook():
+    # Telegram app ni initialize qilish (faqat birinchi marta chaqiriladi)
+    if not telegram_app._initialized:
+        await telegram_app.initialize()
+
+    # Telegram update obyektini olish va yuborish
     update = Update.de_json(request.get_json(force=True), telegram_app.bot)
     await telegram_app.process_update(update)
-    return "OK"
+    return "ok", 200
+
+# Webhook URL ni o‘rnatish (faqat bir marta ishlaydi)
+async def set_webhook():
+    await telegram_app.initialize()
+    await telegram_app.bot.set_webhook(f"{WEBHOOK_URL}/webhook")
+    print("✅ Webhook o‘rnatildi:", f"{WEBHOOK_URL}/webhook")
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    bot = Bot(token=TOKEN)
-    asyncio.run(bot.set_webhook(f"{WEBHOOK_URL}/webhook"))
-    flask_app.run(host="0.0.0.0", port=port)
+    asyncio.run(set_webhook())
+    app.run(host="0.0.0.0", port=10000)
